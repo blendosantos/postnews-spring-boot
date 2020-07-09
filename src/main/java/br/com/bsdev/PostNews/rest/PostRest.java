@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "posts")
@@ -26,6 +27,12 @@ public class PostRest {
         return ResponseEntity.ok(postsHighlight);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<Post>> findOnePost(@PathVariable("id") Integer id){
+        Optional<Post> post = postRepository.findById(id);
+        return ResponseEntity.ok(post);
+    }
+
     @GetMapping("/highlights")
     public ResponseEntity<List<Post>> allIsHighlight(){
         List<Post> postsHighlight = postRepository.allIsHighlight();
@@ -35,12 +42,14 @@ public class PostRest {
     @PostMapping
     public ResponseEntity<MessageResponse> addPost(PostRequest postRequest) {
         MessageResponse messageResponse = new MessageResponse();
+
         if (postRequest.getFile().isEmpty()) {
             messageResponse.setCode(404);
             messageResponse.setMessage("Image not found!");
         }
 
-        if (postRequest.getTitle().length() <= 0 || postRequest.getDescription().length() <= 0 || postRequest.getHighlight() == null) {
+        if (postRequest.getTitle().length() <= 0 || postRequest.getDescription().length() <= 0
+                || postRequest.getHighlight() == null) {
             messageResponse.setCode(500);
             messageResponse.setMessage("Fill in all the service fields!");
         }
@@ -81,7 +90,7 @@ public class PostRest {
         }
 
         String pathImage = null;
-        if (!postRequest.getFile().isEmpty()) {
+        if (postRequest.getFile() != null) {
             pathImage = storageService.uploadFile(postRequest.getFile());
         }
 
